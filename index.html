@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>报价单与合同生成器 - 玮特思定制版</title>
+  <style>
+    :root {
+      --brand-color: #59b9bd; 
+      --bg-gray: #f1f5f9;
+      --border-color: #e2e8f0;
+      --a4-width: 210mm;
+      --a4-height: 297mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background-color: var(--bg-gray);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* --- 左侧编辑面板 --- */
+    .editor-side {
+      width: 400px;
+      background: #fff;
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+      box-shadow: 4px 0 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .editor-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border-color);
+      background: #f8fafc;
+    }
+
+    .editor-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .input-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #334155;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .btn {
+      cursor: pointer;
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      background: #fff;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--brand-color);
+      color: white;
+      border: none;
+      font-weight: 600;
+    }
+
+    .item-table-edit {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    /* --- 右侧预览面板 --- */
+    .preview-side {
+      flex: 1;
+      background: #64748b;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-y: auto;
+      padding: 40px 20px;
+    }
+
+    .preview-controls {
+      margin-bottom: 20px;
+      display: flex;
+      gap: 15px;
+    }
+
+    .paper {
+      width: var(--a4-width);
+      min-height: var(--a4-height);
+      background: white;
+      padding: 15mm 15mm;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transform-origin: top center;
+    }
+
+    .doc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-bottom: 2px solid #333;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+
+    .header-left-company {
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--brand-color);
+      max-width: 70%;
+      letter-spacing: 1px;
+    }
+
+    .header-right-logo {
+      height: 60px;
+      max-width: 180px;
+      object-fit: contain;
+    }
+
+    .doc-title {
+      text-align: center;
+      font-size: 26px;
+      font-weight: bold;
+      letter-spacing: 6px;
+      margin: 20px 0;
+      color: #1e293b;
+    }
+
+    .doc-info-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 12px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .main-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+
+    .main-table th { background: #f8fafc; border: 1px solid #cbd5e1; padding: 10px; font-size: 13px; }
+    .main-table td { border: 1px solid #cbd5e1; padding: 10px; font-size: 13px; text-align: center; }
+
+    .total-section { text-align: right; margin: 15px 0; font-weight: bold; font-size: 18px; color: #0f172a; }
+
+    .terms-title { 
+      font-weight: bold; 
+      border-left: 6px solid var(--brand-color); 
+      padding-left: 12px; 
+      margin-bottom: 12px; 
+      font-size: 16px;
+    }
+
+    .terms-content { font-size: 13px; line-height: 1.8; white-space: pre-wrap; color: #334155; }
+
+    .signature-section {
+      margin-top: 50px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .sig-box {
+      width: 45%;
+      border: 1px dashed #cbd5e1;
+      padding: 15px;
+      position: relative;
+      min-height: 110px;
+      font-size: 14px;
+    }
+
+    .stamp-img {
+      position: absolute;
+      width: 120px;
+      right: 15px;
+      bottom: 10px;
+      opacity: 0.9;
+    }
+
+    @media print {
+      @page { size: A4 portrait; margin: 0; }
+      body { background: white; overflow: visible; }
+      .editor-side, .preview-controls { display: none !important; }
+      .preview-side { padding: 0; background: white; overflow: visible; display: block; }
+      .paper { box-shadow: none; margin: 0; width: 210mm; height: 297mm; transform: none !important; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="editor-side">
+    <div class="editor-header">
+      <h2 style="margin:0; font-size: 18px; color:#1e293b;">📄 玮特思合同系统</h2>
+    </div>
+    <div class="editor-body">
+      <div class="input-group">
+        <label>乙方公司 (已固化)</label>
+        <input type="text" value="上海玮特思智能设备有限公司" disabled style="background:#f1f5f9; color:#64748b;">
+      </div>
+      
+      <div class="input-group">
+        <label>插入公司 Logo</label>
+        <input type="file" accept="image/*" onchange="loadLogo(this)">
+        <p style="font-size: 11px; color: #94a3b8; margin-top:4px;">*建议上传透明底 Logo 图片</p>
+      </div>
+
+      <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+      <div class="input-group">
+        <label>合同标题</label>
+        <input type="text" id="in-title" value="智能设备采购合同" oninput="update()">
+      </div>
+      <div class="input-group">
+        <label>甲方 (客户全称)</label>
+        <input type="text" id="in-client" placeholder="请输入客户公司名称" oninput="update()">
+      </div>
+      <div class="input-group">
+        <label>合同日期</label>
+        <input type="date" id="in-date" oninput="update()">
+      </div>
+
+      <label>报价明细表</label>
+      <table class="item-table-edit">
+        <thead>
+          <tr><th>名称/规格</th><th width="70">单价</th><th width="45">数量</th><th width="30"></th></tr>
+        </thead>
+        <tbody id="item-list"></tbody>
+      </table>
+      <button class="btn" style="width:100%; margin-top:8px; border-color:var(--brand-color); color:var(--brand-color);" onclick="addItem()">+ 添加设备项</button>
+
+      <div class="input-group" style="margin-top: 25px;">
+        <label>合同条款</label>
+        <textarea id="in-terms" style="height:100px;" oninput="update()">1. 质量保证：乙方保证所供设备符合国家相关质量标准。
+2. 付款方式：预付30%，设备进场支付60%，验收合格后结清余款。
+3. 交付期限：合同签订后30个工作日内交付。</textarea>
+      </div>
+
+      <div class="input-group">
+        <label>上传乙方电子印章</label>
+        <input type="file" accept="image/*" onchange="loadStamp(this)">
+      </div>
+    </div>
+  </div>
+
+  <div class="preview-side">
+    <div class="preview-controls">
+      <button class="btn btn-primary" onclick="window.print()">🖨️ 导出 A4 打印文档</button>
+      <button class="btn" onclick="resetData()">重置清空数据</button>
+    </div>
+
+    <div class="paper" id="paper">
+      <div class="doc-header">
+        <div class="header-left-company">上海玮特思智能设备有限公司</div>
+        <img id="out-logo" class="header-right-logo" src="" style="display:none;">
+      </div>
+
+      <div class="doc-title" id="out-title">合同/报价单</div>
+
+      <div class="doc-info-grid">
+        <div>甲方 (买方)：<span id="out-client" style="border-bottom: 1px solid #333; padding: 0 10px; min-width: 150px; display: inline-block;"></span></div>
+        <div style="text-align: right;">日期：<span id="out-date" style="font-weight: 600;"></span></div>
+        <div>乙方 (卖方)：<span id="out-supplier" style="font-weight:900;">上海玮特思智能设备有限公司</span></div>
+        <div style="text-align: right; color: #64748b; font-size: 11px;">NO: WT-2026-001</div>
+      </div>
+
+      <table class="main-table">
+        <thead>
+          <tr><th width="50">序号</th><th>项目/设备名称及规格</th><th width="100">单价 (元)</th><th width="60">数量</th><th width="100">小计</th></tr>
+        </thead>
+        <tbody id="out-items"></tbody>
+      </table>
+
+      <div class="total-section">总计人民币：<span id="out-total">¥ 0.00</span></div>
+
+      <div class="terms-section">
+        <div class="terms-title">法律及商务条款</div>
+        <div class="terms-content" id="out-terms"></div>
+      </div>
+
+      <div class="signature-section">
+        <div class="sig-box">甲方代表 (签章)：<div style="margin-top: 50px; font-size: 12px;">日期：2026&nbsp;&nbsp;年&nbsp;&nbsp;&nbsp;&nbsp;月&nbsp;&nbsp;&nbsp;&nbsp;日</div></div>
+        <div class="sig-box">
+            乙方代表 (签章)：
+            <img id="out-stamp" class="stamp-img" src="" style="display:none;">
+            <div style="margin-top: 50px; font-size: 12px;">日期：2026&nbsp;&nbsp;年&nbsp;&nbsp;&nbsp;&nbsp;月&nbsp;&nbsp;&nbsp;&nbsp;日</div>
+        </div>
+      </div>
+      
+      <div style="margin-top: auto; text-align: center; color: #94a3b8; font-size: 10px;">
+        本文件由上海玮特思智能设备有限公司办公系统自动生成
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const FIXED_NAME = "上海玮特思智能设备有限公司";
+    let items = JSON.parse(localStorage.getItem('vites_items')) || [{name: '智能控制终端', price: 5000, qty: 1}];
+    document.getElementById('in-date').valueAsDate = new Date();
+
+    function addItem() { items.push({name: '', price: 0, qty: 1}); renderItems(); update(); }
+    function removeItem(i) { items.splice(i, 1); renderItems(); update(); }
+
+    function renderItems() {
+      const container = document.getElementById('item-list');
+      container.innerHTML = items.map((item, i) => `
+        <tr>
+          <td><input type="text" value="${item.name}" oninput="items[${i}].name=this.value;update()"></td>
+          <td><input type="number" value="${item.price}" oninput="items[${i}].price=Number(this.value);update()"></td>
+          <td><input type="number" value="${item.qty}" oninput="items[${i}].qty=Number(this.value);update()"></td>
+          <td><button style="color:#ef4444;border:none;background:none;cursor:pointer;" onclick="removeItem(${i})">×</button></td>
+        </tr>
+      `).join('');
+    }
+
+    function update() {
+      const fields = ['title', 'client', 'date', 'terms'];
+      fields.forEach(f => {
+        document.getElementById('out-' + f).innerText = document.getElementById('in-' + f).value;
+      });
+
+      let total = 0;
+      const outItems = document.getElementById('out-items');
+      outItems.innerHTML = items.map((item, i) => {
+        const sub = item.price * item.qty;
+        total += sub;
+        return `<tr><td>${i+1}</td><td style="text-align:left">${item.name}</td><td>${item.price.toFixed(2)}</td><td>${item.qty}</td><td>${sub.toFixed(2)}</td></tr>`;
+      }).join('');
+      document.getElementById('out-total').innerText = '¥ ' + total.toLocaleString('zh-CN', {minimumFractionDigits: 2});
+      localStorage.setItem('vites_items', JSON.stringify(items));
+    }
+
+    // Logo 加载函数
+    function loadLogo(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = document.getElementById('out-logo');
+          img.src = e.target.result;
+          img.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    function loadStamp(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = document.getElementById('out-stamp');
+          img.src = e.target.result;
+          img.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    function resetData() { if (confirm('确定清空当前填写的数据吗？')) { localStorage.clear(); location.reload(); } }
+
+    renderItems();
+    update();
+
+    function adaptScale() {
+      const paper = document.getElementById('paper');
+      const side = document.querySelector('.preview-side');
+      if(!paper || !side) return;
+      const scale = (side.clientWidth - 80) / paper.offsetWidth;
+      paper.style.transform = scale < 1 ? `scale(${scale})` : `scale(1)`;
+    }
+    window.addEventListener('resize', adaptScale);
+    adaptScale();
+  </script>
+</body>
+</html>
