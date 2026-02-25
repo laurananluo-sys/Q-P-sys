@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>单据系统 - PENTAMASTER 样式</title>
+    <style>
+        /* 基础样式 */
+        body { font-family: Arial, sans-serif; color: #333; line-height: 1.4; margin: 20px; }
+        .invoice-container { max-width: 850px; margin: auto; padding: 30px; border: 1px solid #eee; }
+        
+        /* 头部布局 */
+        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        .company-header h2 { margin: 0; font-size: 1.4em; }
+        .doc-type { font-size: 1.8em; font-weight: bold; color: #000; text-align: right; }
+
+        /* 信息栏 */
+        .info-section { display: flex; justify-content: space-between; margin: 20px 0; }
+        .bill-to, .order-meta { width: 48%; }
+        table.meta-table { width: 100%; border-collapse: collapse; }
+        table.meta-table td { padding: 3px 0; border: none; font-size: 0.9em; }
+
+        /* 商品表格 */
+        .item-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .item-table th { background: #f4f4f4; border: 1px solid #ccc; padding: 10px; text-align: left; }
+        .item-table td { border: 1px solid #ccc; padding: 10px; }
+        .text-right { text-align: right; }
+
+        /* 汇总与银行信息 */
+        .bottom-section { display: flex; justify-content: space-between; margin-top: 30px; }
+        .bank-details { width: 60%; font-size: 0.85em; background: #fafafa; padding: 10px; border: 1px dashed #ccc; }
+        .totals { width: 35%; text-align: right; }
+        .totals p { margin: 5px 0; font-weight: bold; font-size: 1.1em; }
+
+        /* 打印适配 */
+        @media print {
+            .no-print { display: none; }
+            .invoice-container { border: none; }
+        }
+    </style>
+</head>
+<body class="type-pi">
+
+    <div class="no-print" style="text-align:center; margin-bottom: 20px;">
+        <button onclick="window.print()">打印当前单据</button>
+    </div>
+
+    <div class="invoice-container">
+        <div class="header">
+            <div class="company-header">
+                <h2>SHANGHAI WEITESI INTELLIGENT EQUIPMENT CO., LTD</h2>
+                <p>5F, BUILDING 11, NO 6055 JINHAI ROAD FENGXIAN,<br>
+                201400 SHANGHAI, CHINA<br>
+                Email: andy.chung@wetestech.com</p>
+            </div>
+            <div class="doc-type" id="doc-title">PROFORMA INVOICE</div>
+        </div>
+
+        <div class="info-section">
+            <div class="bill-to">
+                <h4 style="margin-bottom:5px;">BILL TO:</h4>
+                <p><strong>PENTAMASTER TECHNOLOGY (M) SDN. BHD</strong><br>
+                PLOT 18 & 19, TECHNOPLEX, MEDAN BAYAN LEPAS,<br>
+                TMN. PERINDUSTRIAN BAYAN LEPAS,<br>
+                PHASE IV BAYAN LEPAS, 11900 PENANG, MALAYSIA</p>
+            </div>
+            <div class="order-meta">
+                <table class="meta-table">
+                    <tr><td>单据编号 (S/O):</td><td contenteditable="true">SO-2026021908</td></tr>
+                    <tr><td>参考编号 (Ref):</td><td contenteditable="true">POT260201850</td></tr>
+                    <tr><td>日期 (Date):</td><td contenteditable="true">2026/2/23</td></tr>
+                    <tr><td>贸易条款 (Terms):</td><td contenteditable="true">EX-WORK CHINA</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <table class="item-table">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Description</th>
+                    <th class="text-right">U/Price (USD)</th>
+                    <th class="text-right">Qty</th>
+                    <th class="text-right">Total (USD)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td contenteditable="true">NI PXIE4139 SYSTEM SMU</td>
+                    <td class="text-right" contenteditable="true">1,333.35</td>
+                    <td class="text-right" contenteditable="true">6</td>
+                    <td class="text-right" contenteditable="true">8,000.08</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td contenteditable="true">NI PXIE4139 SYSTEM SMU</td>
+                    <td class="text-right" contenteditable="true">1,333.33</td>
+                    <td class="text-right" contenteditable="true">24</td>
+                    <td class="text-right" contenteditable="true">31,999.92</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="bottom-section">
+            <div class="bank-details">
+                <strong>WIRE TRANSFER DETAILS:</strong><br>
+                Bank: CHINA CONSTRUCTION BANK SHANGHAI PUDONG BRANCH<br>
+                Swift Code: PCBCCNBJSHX<br>
+                A/C No: 31050161369900001304<br>
+                A/C Name: Shanghai Weitesi Intelligent Equipment Co., Ltd<br>
+                Address: WORLD FINANCIAL BUILDING NO.900 LU JIA ZUIRING ROAD
+            </div>
+            <div class="totals">
+                <p>Sub Total: $ 40,000.00</p>
+                <p>Shipping: $ 0.00</p>
+                <hr>
+                <p style="font-size: 1.3em;">TOTAL: $ 40,000.00</p>
+            </div>
+        </div>
+
+        <div style="margin-top: 50px; text-align: right;">
+            <p>Authorised Signature</p>
+            <div style="border-bottom: 1px solid #000; width: 200px; display: inline-block; height: 40px;"></div>
+        </div>
+    </div>
+</body>
+</html>
