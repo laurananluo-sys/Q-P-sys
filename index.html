@@ -3,118 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>报价单与合同生成器 - 玮特思定制版</title>
+    <title>玮特思合同系统 - 专业版</title>
     <style>
-        :root {
-            --brand-color: #59b9bd;
-            --a4-width: 210mm;
-        }
-
+        :root { --brand-color: #59b9bd; --paper-width: 210mm; }
         * { box-sizing: border-box; -webkit-print-color-adjust: exact; }
+        body { font-family: "PingFang SC", sans-serif; margin: 0; display: flex; background: #f4f7f9; height: 100vh; }
 
-        body {
-            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-            margin: 0; display: flex; background: #f1f5f9; color: #333;
+        /* 左侧选择栏样式 */
+        .no-print-sidebar {
+            width: 380px; padding: 25px; background: white;
+            border-right: 1px solid #e2e8f0; overflow-y: auto; height: 100vh;
         }
-
-        /* 左侧输入区 */
-        .no-print-panel {
-            width: 380px; height: 100vh; padding: 20px;
-            background: #fff; border-right: 1px solid #e2e8f0;
-            overflow-y: auto; position: sticky; top: 0;
-        }
-
-        .input-group { margin-bottom: 15px; padding: 10px; border: 1px solid #f1f5f9; border-radius: 8px; }
-        label { font-size: 13px; font-weight: bold; color: #64748b; display: block; margin-bottom: 5px; }
-        input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
+        .sidebar-header { display: flex; align-items: center; margin-bottom: 25px; font-weight: bold; font-size: 18px; }
+        .input-block { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: #475569; }
+        .hint { font-size: 11px; color: #94a3b8; margin-top: 4px; }
         
-        .item-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr; gap: 5px; margin-bottom: 8px; }
-        .item-row input { padding: 6px; font-size: 12px; }
+        input, .file-input-box {
+            width: 100%; padding: 10px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 14px;
+        }
+        .device-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+        .device-row input { flex: 1; padding: 8px; font-size: 13px; }
+        .delete-btn { color: #ff4d4f; cursor: pointer; font-weight: bold; padding: 0 5px; }
 
-        /* 右侧预览区 */
-        .preview-container { flex: 1; height: 100vh; overflow-y: auto; padding: 30px; display: flex; justify-content: center; }
-
+        /* 右侧预览区样式 */
+        .preview-area { flex: 1; overflow-y: auto; padding: 40px; display: flex; justify-content: center; }
         .paper {
-            width: var(--a4-width); min-height: 297mm; padding: 15mm 20mm;
-            background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            position: relative;
+            width: var(--paper-width); min-height: 297mm; padding: 20mm;
+            background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.05); position: relative;
         }
 
-        /* 打印适配 */
+        /* 表格与计算样式 */
+        table { width: 100% !important; border-collapse: collapse; table-layout: fixed; margin: 20px 0; border: 1.5px solid #000; }
+        th, td { border: 1px solid #000; padding: 10px; font-size: 13px; text-align: center; word-wrap: break-word; }
+        th { background: #f2f2f2; }
+        .tfoot-label { text-align: right; font-weight: bold; padding-right: 15px; }
+
+        /* 公章与签署 */
+        .sign-wrap { display: flex; justify-content: space-between; margin-top: 40px; }
+        .sign-box { width: 48%; border: 1px solid #000; padding: 15px; position: relative; min-height: 150px; }
+        .seal-img { position: absolute; width: 130px; right: 15px; top: 10px; opacity: 0.95; z-index: 10; }
+
         @media print {
-            .no-print-panel { display: none !important; }
+            .no-print-sidebar { display: none !important; }
             body { background: white; }
-            .preview-container { padding: 0; overflow: visible; }
-            .paper { width: 100% !important; border: none; box-shadow: none; padding: 10mm; margin: 0; }
-            @page { size: A4; margin: 0; }
+            .preview-area { padding: 0; }
+            .paper { width: 100% !important; box-shadow: none; padding: 10mm; }
         }
 
-        /* 表格样式：解决右侧截断 */
-        table {
-            width: 100% !important; border-collapse: collapse;
-            table-layout: fixed; margin: 15px 0; border: 1.5px solid #000;
+        .btn-add {
+            width: 100%; padding: 10px; border: 1.5px solid var(--brand-color);
+            color: var(--brand-color); background: transparent; border-radius: 8px;
+            cursor: pointer; font-weight: bold; transition: 0.2s;
         }
-        th, td {
-            border: 1px solid #000; padding: 8px; font-size: 13px;
-            word-wrap: break-word; text-align: center;
-        }
-        th { background: #f2f2f2; font-weight: bold; }
-        .text-left { text-align: left; }
-        .text-right { text-align: right; }
-
-        /* 签署区与公章 */
-        .sign-section { display: flex; justify-content: space-between; margin-top: 40px; page-break-inside: avoid; }
-        .sign-box { width: 48%; position: relative; min-height: 150px; border: 1px solid #000; padding: 10px; }
-        .seal-img { 
-            position: absolute; width: 140px; right: 10px; top: 10px; 
-            opacity: 0.9; pointer-events: none; z-index: 100;
-        }
-
-        button {
-            width: 100%; padding: 12px; background: #59b9bd; color: white;
-            border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px;
+        .btn-add:hover { background: #f0fdfa; }
+        .btn-print {
+            width: 100%; padding: 12px; background: var(--brand-color);
+            color: white; border: none; border-radius: 8px; font-weight: bold;
+            margin-top: 20px; cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <div class="no-print-panel">
-        <h3 style="margin-top:0">配置报价信息</h3>
+    <div class="no-print-sidebar">
+        <div class="sidebar-header">📄 玮特思合同系统</div>
         
-        <div class="input-group">
-            <label>甲方名称</label>
-            <input type="text" id="in-partyA" oninput="sync()" placeholder="待填写">
+        <div class="input-block">
+            <label>乙方公司 (已固化)</label>
+            <input type="text" value="上海玮玮特思智能设备有限公司" disabled style="background: #f8fafc;">
         </div>
 
-        <div class="input-group">
-            <label>项目列表 (名称 | 单位 | 数量 | 未税单价)</label>
-            <div id="items-container">
-                <div class="item-row">
-                    <input type="text" class="p-name" placeholder="产品名称" oninput="updateData()">
-                    <input type="text" class="p-unit" placeholder="单位" value="套" oninput="updateData()">
-                    <input type="number" class="p-qty" placeholder="数量" oninput="updateData()">
-                    <input type="number" class="p-price" placeholder="未税单价" oninput="updateData()">
+        <div class="input-block">
+            <label>插入公司 Logo</label>
+            <input type="file" id="logo-upload" accept="image/*" onchange="handleLogo(this)">
+            <div class="hint">*建议上传透明底 Logo 图片</div>
+        </div>
+
+        <div class="input-block">
+            <label>合同标题</label>
+            <input type="text" id="in-title" placeholder="如：智能设备采购合同" oninput="syncFields()" value="技术服务报价单">
+        </div>
+
+        <div class="input-block">
+            <label>甲方 (客户全称)</label>
+            <input type="text" id="in-partyA" placeholder="请输入客户公司名称" oninput="syncFields()">
+        </div>
+
+        <div class="input-block">
+            <label>合同日期</label>
+            <input type="text" id="in-date" value="2026/02/25" oninput="syncFields()">
+        </div>
+
+        <div class="input-block">
+            <label>报价明细表</label>
+            <div id="items-list">
+                <div class="device-row">
+                    <input type="text" class="p-name" placeholder="名称/规格" oninput="calc()">
+                    <input type="text" class="p-unit" placeholder="单位" value="套" oninput="calc()" style="width: 50px; flex: none;">
+                    <input type="number" class="p-price" placeholder="单价" oninput="calc()">
+                    <input type="number" class="p-qty" placeholder="数量" oninput="calc()">
                 </div>
             </div>
-            <button onclick="addRow()" style="background:#64748b; font-size:12px; padding:5px;">+ 添加一行</button>
+            <button class="btn-add" onclick="addNewRow()">+ 添加设备项</button>
         </div>
 
-        <div class="input-group">
+        <div class="input-block">
             <label>折扣金额 (CNY)</label>
-            <input type="number" id="in-discount" value="0" oninput="updateData()">
+            <input type="number" id="in-discount" value="0" oninput="calc()">
         </div>
 
-        <button onclick="window.print()">🖨️ 导出为 PDF / 打印</button>
-        <p style="font-size:11px; color:#94a3b8; margin-top:10px;">注意：Safari 打印请勾选“打印背景图形”，页边距设为“无”。</p>
+        <button class="btn-print" onclick="window.print()">打印 / 生成 PDF</button>
     </div>
 
-    <div class="preview-container">
+    <div class="preview-area">
         <div class="paper">
-            <h2 style="text-align:center;">技术服务报价单</h2>
+            <img id="out-logo" style="max-height: 50px; margin-bottom: 10px; display: none;">
+            <h2 id="out-title" style="text-align: center; margin-top: 0;">技术服务报价单</h2>
             
-            <p>甲方：<span id="out-partyA" style="border-bottom:1px solid #000; min-width:150px; display:inline-block;">(待填写)</span></p>
-            <p>乙方：上海玮玮特思智能装备有限公司</p>
-            <p>日期：2026年02月24日</p>
+            <p>甲方：<span id="out-partyA" style="border-bottom: 1px solid #000; min-width: 180px; display: inline-block;"></span></p>
+            <p>乙方：上海玮玮特思智能设备有限公司</p>
+            <p>日期：<span id="out-date">2026/02/25</span></p>
 
             <table>
                 <thead>
@@ -127,94 +136,106 @@
                         <th style="width: 20%">金额 (CNY)</th>
                     </tr>
                 </thead>
-                <tbody id="out-table">
-                    </tbody>
+                <tbody id="table-body"></tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="5" class="text-right">未税总价</td>
-                        <td id="view-untaxed-total">0.00</td>
+                        <td colspan="5" class="tfoot-label">未税总价</td>
+                        <td id="res-untaxed">0.00</td>
                     </tr>
                     <tr>
-                        <td colspan="5" class="text-right">折扣</td>
-                        <td id="view-discount-val">0.00</td>
+                        <td colspan="5" class="tfoot-label">折扣</td>
+                        <td id="res-discount">0.00</td>
                     </tr>
                     <tr>
-                        <td colspan="5" class="text-right" style="font-weight:bold;">含税总价 (13%增值税)</td>
-                        <td id="view-taxed-total" style="font-weight:bold;">0.00</td>
+                        <td colspan="5" class="tfoot-label">含税总价 (13%增值税)</td>
+                        <td id="res-taxed" style="font-weight: bold;">0.00</td>
                     </tr>
                 </tfoot>
             </table>
 
-            <div class="sign-section">
+            <div class="sign-wrap">
                 <div class="sign-box">
                     <p><b>甲方（客户）签署</b></p>
-                    <p>单位名称：<span id="out-partyA-sign"></span></p>
-                    <p>授权代表：___________</p>
-                    <p>日期：___________</p>
+                    <p>单位：<span id="out-partyA-sign"></span></p>
+                    <p>代表：___________</p>
                 </div>
                 <div class="sign-box">
                     <p><b>乙方（供方）签署</b></p>
-                    <p>单位名称：上海玮玮特思智能装备有限公司</p>
-                    <p>乙方盖章：</p>
+                    <p>单位：上海玮玮特思智能设备有限公司</p>
                     <img src="seal.png" class="seal-img" alt="公章">
-                    <p>授权代表：___________</p>
-                    <p>日期：2026-02-24</p>
+                    <p>代表：___________</p>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        function addRow() {
-            const div = document.createElement('div');
-            div.className = 'item-row';
-            div.innerHTML = `
-                <input type="text" class="p-name" placeholder="产品名称" oninput="updateData()">
-                <input type="text" class="p-unit" placeholder="单位" value="套" oninput="updateData()">
-                <input type="number" class="p-qty" placeholder="数量" oninput="updateData()">
-                <input type="number" class="p-price" placeholder="未税单价" oninput="updateData()">
+        function handleLogo(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = document.getElementById('out-logo');
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function addNewRow() {
+            const row = document.createElement('div');
+            row.className = 'device-row';
+            row.innerHTML = `
+                <input type="text" class="p-name" placeholder="名称/规格" oninput="calc()">
+                <input type="text" class="p-unit" placeholder="单位" value="套" oninput="calc()" style="width: 50px; flex: none;">
+                <input type="number" class="p-price" placeholder="单价" oninput="calc()">
+                <input type="number" class="p-qty" placeholder="数量" oninput="calc()">
+                <span class="delete-btn" onclick="this.parentElement.remove(); calc();">×</span>
             `;
-            document.getElementById('items-container').appendChild(div);
+            document.getElementById('items-list').appendChild(row);
         }
 
-        function sync() {
-            const val = document.getElementById('in-partyA').value || "(待填写)";
-            document.getElementById('out-partyA').innerText = val;
-            document.getElementById('out-partyA-sign').innerText = val;
+        function syncFields() {
+            document.getElementById('out-title').innerText = document.getElementById('in-title').value;
+            const partyA = document.getElementById('in-partyA').value;
+            document.getElementById('out-partyA').innerText = partyA;
+            document.getElementById('out-partyA-sign').innerText = partyA;
+            document.getElementById('out-date').innerText = document.getElementById('in-date').value;
         }
 
-        function updateData() {
+        function calc() {
             const names = document.querySelectorAll('.p-name');
             const units = document.querySelectorAll('.p-unit');
-            const qtys = document.querySelectorAll('.p-qty');
             const prices = document.querySelectorAll('.p-price');
-            const discountIn = parseFloat(document.getElementById('in-discount').value) || 0;
+            const qtys = document.querySelectorAll('.p-qty');
+            const discInput = parseFloat(document.getElementById('in-discount').value) || 0;
 
-            let tableHTML = '';
+            let html = '';
             let untaxedTotal = 0;
 
-            names.forEach((name, i) => {
-                const q = parseFloat(qtys[i].value) || 0;
+            names.forEach((n, i) => {
                 const p = parseFloat(prices[i].value) || 0;
-                const lineAmount = q * p;
-                untaxedTotal += lineAmount;
+                const q = parseFloat(qtys[i].value) || 0;
+                const line = p * q;
+                untaxedTotal += line;
 
-                tableHTML += `<tr>
-                    <td>${i + 1}</td>
-                    <td class="text-left">${name.value || '-'}</td>
+                html += `<tr>
+                    <td>${i+1}</td>
+                    <td style="text-align:left">${n.value || '-'}</td>
                     <td>${units[i].value || '套'}</td>
                     <td>${q}</td>
                     <td>${p.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                    <td>${lineAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td>${line.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
                 </tr>`;
             });
 
-            const finalTaxed = (untaxedTotal - discountIn) * 1.13;
+            const taxedTotal = (untaxedTotal - discInput) * 1.13;
 
-            document.getElementById('out-table').innerHTML = tableHTML;
-            document.getElementById('view-untaxed-total').innerText = untaxedTotal.toLocaleString(undefined, {minimumFractionDigits: 2});
-            document.getElementById('view-discount-val').innerText = discountIn > 0 ? "-" + discountIn.toLocaleString() : "0.00";
-            document.getElementById('view-taxed-total').innerText = finalTaxed.toLocaleString(undefined, {minimumFractionDigits: 2});
+            document.getElementById('table-body').innerHTML = html;
+            document.getElementById('res-untaxed').innerText = untaxedTotal.toLocaleString(undefined, {minimumFractionDigits: 2});
+            document.getElementById('res-discount').innerText = discInput > 0 ? "-" + discInput.toLocaleString() : "0.00";
+            document.getElementById('res-taxed').innerText = taxedTotal.toLocaleString(undefined, {minimumFractionDigits: 2});
         }
     </script>
 </body>
