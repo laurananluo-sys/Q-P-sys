@@ -3,231 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>玮特思合同系统 - 旗舰修复版</title>
+    <title>玮特思合同系统 - 智编旗舰修正版</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.2/xlsx.full.min.js"></script>
     <style>
         :root { --paper-width: 210mm; }
         * { box-sizing: border-box; -webkit-print-color-adjust: exact; }
-
+        
         body { 
-            font-family: Arial, "SimSun", "宋体", serif;
-            margin: 0; display: flex; background: #f0f2f5; color: #000;
-            line-height: 1.4;
+            font-family: Arial, "SimSun", "宋体", serif; 
+            margin: 0; display: flex; background: #f0f2f5; color: #000; 
+            line-height: 1.4; font-size: 13px;
         }
 
-        /* 左侧控制面板 */
-        .no-print-sidebar {
-            width: 420px; padding: 25px; background: #ffffff;
-            border-right: 1px solid #d1d5db; overflow-y: auto; height: 100vh;
-        }
-        .sidebar-header { font-size: 18px; font-weight: bold; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; color: #263238; }
-        .input-block { margin-bottom: 20px; padding: 10px; background: #fcfcfc; border: 1px solid #f0f0f0; border-radius: 4px; }
-        label { display: block; margin-bottom: 6px; font-size: 12px; font-weight: bold; color: #555; }
-        input, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; margin-bottom: 6px; }
-        textarea { resize: vertical; min-height: 100px; line-height: 1.5; }
+        /* 左侧面板 */
+        .no-print-sidebar { width: 380px; padding: 20px; background: #ffffff; border-right: 1px solid #d1d5db; overflow-y: auto; height: 100vh; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .input-block { margin-bottom: 15px; padding: 10px; background: #fcfcfc; border: 1px solid #f0f0f0; border-radius: 6px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #444; font-size: 12px; }
+        input, textarea, select { width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; margin-bottom: 5px; }
+        textarea { resize: vertical; min-height: 100px; font-family: inherit; }
 
-        .lang-switch { display: flex; gap: 10px; margin-bottom: 10px; }
-        .lang-btn { flex: 1; padding: 8px; cursor: pointer; border: 1px solid #ccc; border-radius: 4px; background: #fff; font-size: 12px; }
+        .btn-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 10px; }
+        .btn-small { padding: 8px 4px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; border: 1px solid #ccc; background: #fff; text-align: center; }
+        .btn-save { background: #2e7d32; color: white; border-color: #2e7d32; }
+        .btn-print-sm { background: #263238; color: white; border-color: #263238; }
+
+        .lang-switch { display: flex; gap: 5px; margin-bottom: 15px; }
+        .lang-btn { flex: 1; padding: 6px; cursor: pointer; border: 1px solid #ccc; border-radius: 4px; background: #fff; font-size: 11px; }
         .lang-btn.active { background: #263238; color: #fff; border-color: #263238; }
 
-        .gen-btn { background: #f8fafc; border: 1px solid #cbd5e1; padding: 4px 10px; font-size: 11px; cursor: pointer; border-radius: 4px; margin: 4px 5px 0 0; }
-        .device-row { display: flex; gap: 4px; margin-bottom: 6px; }
-
-        /* 右侧 A4 预览 */
-        .preview-area { flex: 1; overflow-y: auto; padding: 40px; display: flex; justify-content: center; }
-        .paper { 
-            width: var(--paper-width); min-height: 297mm; padding: 15mm 20mm; 
-            background: white; position: relative; box-shadow: 0 0 10px rgba(0,0,0,0.1); 
-        }
-
-        /* 页眉重排：左侧公司名，右侧Logo */
+        /* 右侧预览 */
+        .preview-area { flex: 1; overflow-y: auto; padding: 30px; display: flex; justify-content: center; }
+        .paper { width: var(--paper-width); min-height: 297mm; padding: 15mm 20mm; background: white; position: relative; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         .page-header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1.5px solid #000; margin-bottom: 15px; padding-bottom: 8px; }
-        .company-name-header { font-size: 17px; font-weight: bold; }
+        .company-name-header { font-size: 18px; font-weight: bold; }
         #out-logo { max-height: 45px; max-width: 150px; display: none; }
+        .title-section { text-align: center; margin-bottom: 20px; }
+        .doc-title { font-size: 18.6px; font-weight: bold; margin: 0; letter-spacing: 4px; }
+        .meta-line { display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 15px; }
+        .contact-row { display: flex; align-items: baseline; margin-bottom: 4px; }
+        .contact-row b { min-width: 70px; white-space: nowrap; }
 
-        .title-section { text-align: center; margin-bottom: 15px; }
-        .doc-title { font-size: 28px; font-weight: bold; margin: 0 0 10px 0; letter-spacing: 8px; }
-        
-        .meta-line { 
-            display: flex; 
-            justify-content: space-between; 
-            font-size: 14px; 
-            padding-bottom: 5px; 
-            margin-bottom: 15px; 
-        }
-
-        .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 20px; font-size: 14px; }
-        .contact-col p { margin: 5px 0; }
-        .bold-label { font-weight: bold; }
-
-        table { width: 100% !important; border-collapse: collapse; table-layout: fixed; margin: 15px 0; border: 1.5px solid #000; }
-        th, td { border: 1px solid #000; padding: 10px 4px; font-size: 13px; text-align: center; }
-        th { font-weight: bold; }
-        .tfoot-label { text-align: right; font-weight: bold; padding-right: 15px; }
-
-        /* 合约条款样式 */
-        .terms-section { margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
-        .terms-title { font-weight: bold; font-size: 14px; margin-bottom: 10px; }
-        .terms-content { font-size: 13px; white-space: pre-wrap; word-wrap: break-word; line-height: 1.6; }
-
-        .sign-wrap { display: flex; justify-content: space-between; margin-top: 45px; page-break-inside: avoid; }
-        .sign-box { width: 48%; border: 1px solid #000; padding: 15px; position: relative; min-height: 150px; font-size: 13px; }
-        .seal-preview { position: absolute; width: 130px; right: 25px; top: 15px; opacity: 0.95; pointer-events: none; }
+        table { width: 100% !important; border-collapse: collapse; table-layout: fixed; margin-bottom: 15px; border: 1.5px solid #000; }
+        th, td { border: 1px solid #000; padding: 6px 4px; text-align: center; font-size: 13px; }
+        th { background-color: transparent; font-weight: bold; }
+        .terms-section { margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
+        .terms-content { white-space: pre-wrap; line-height: 1.6; text-align: justify; }
+        .sign-wrap { display: flex; justify-content: space-between; margin-top: 40px; page-break-inside: avoid; }
+        .sign-box { width: 48%; border: 1px solid #000; padding: 15px; position: relative; min-height: 120px; }
+        .seal-preview { position: absolute; width: 120px; right: 20px; top: 15px; opacity: 0.95; pointer-events: none; display: none; }
+        .device-row { display: grid; grid-template-columns: 2fr 0.7fr 1.2fr 0.8fr 25px; gap: 3px; margin-bottom: 5px; }
 
         @media print {
             .no-print-sidebar { display: none !important; }
             .preview-area { padding: 0; }
-            .paper { width: 100% !important; padding: 10mm 15mm; margin: 0; border: none; box-shadow: none; min-height: auto; }
-            @page { size: A4; margin: 0; }
+            .paper { width: 100% !important; border: none; box-shadow: none; }
+            @page { size: A4; margin: 10mm 0; }
         }
-
-        .btn-print { width: 100%; padding: 15px; background: #263238; color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 16px; }
     </style>
 </head>
 <body>
 
     <div class="no-print-sidebar">
-        <div class="sidebar-header">WEITESI 管理系统</div>
-        
-        <div class="input-block">
-            <label>单据语言 (Language)</label>
-            <div class="lang-switch">
-                <button class="lang-btn active" id="btn-zh" onclick="setLang('zh')">中文 (ZH)</button>
-                <button class="lang-btn" id="btn-en" onclick="setLang('en')">English (EN)</button>
-            </div>
+        <div class="sidebar-header">
+            <span>WEITESI 控制台</span>
+            <button onclick="resetForm()" style="font-size:10px; cursor:pointer;">重置清空</button>
+        </div>
+
+        <div class="lang-switch">
+            <button class="lang-btn active" id="btn-zh" onclick="setLang('zh')">中文 (ZH)</button>
+            <button class="lang-btn" id="btn-en" onclick="setLang('en')">English (EN)</button>
         </div>
 
         <div class="input-block">
-            <label>1. 盖章信息</label>
-            <span style="font-size:11px;">公司 Logo (右上方):</span>
-            <input type="file" accept="image/*" onchange="uploadImg(this, 'out-logo')">
-            <span style="font-size:11px;">盖章 (Seal):</span>
-            <input type="file" accept="image/*" onchange="uploadImg(this, 'out-seal')">
+            <label>1. 数据与执行</label>
+            <div class="btn-row">
+                <button class="btn-small btn-print-sm" onclick="window.print()">🖨️ 打印PDF</button>
+                <button class="btn-small btn-save" onclick="exportToExcel()">📊 导出Excel</button>
+                <button class="btn-small" onclick="document.getElementById('importExcel').click()">📥 导入Excel</button>
+                <input type="file" id="importExcel" style="display:none" accept=".xlsx" onchange="importFromExcel(this)">
+            </div>
+            <div class="btn-row" style="grid-template-columns: 1fr 1fr;">
+                <button class="btn-small" onclick="generateID('Q')">生成报价号(Q)</button>
+                <button class="btn-small" onclick="generateID('PO')">生成合同号(PO)</button>
+            </div>
         </div>
 
         <div class="input-block">
             <label>2. 核心信息</label>
             <input type="text" id="in-title" value="技术服务报价单" oninput="sync()">
-            <input type="text" id="in-date" value="2026年02月25日" oninput="sync()">
             <input type="text" id="in-no" placeholder="单据编号" oninput="sync()">
-            <button class="gen-btn" onclick="generateID('Q')">生成报价单号</button>
-            <button class="gen-btn" onclick="generateID('PO')">生成合同号</button>
+            <input type="text" id="in-date" value="2026年02月26日" oninput="sync()">
         </div>
 
         <div class="input-block">
-            <label>3. 双方联系信息</label>
+            <label>3. 甲方/乙方信息</label>
             <input type="text" id="in-partyA" placeholder="甲方全称" oninput="sync()">
+            <input type="text" id="in-addrA" placeholder="甲方地址" oninput="sync()">
             <input type="text" id="in-contactA" placeholder="甲方联系人" oninput="sync()">
-            <input type="text" id="in-phoneA" placeholder="甲方电话" oninput="sync()">
-            <input type="text" id="in-emailA" placeholder="甲方邮箱" oninput="sync()">
-            <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
+            <input type="text" id="in-phoneA" placeholder="甲方电话/邮箱" oninput="sync()">
+            <hr style="margin:8px 0; border:none; border-top:1px solid #eee;">
+            <input type="text" id="in-partyB-manual" value="上海玮特思智能设备有限公司" oninput="sync()">
+            <input type="text" id="in-addrB" value="" oninput="sync()">
             <input type="text" id="in-contactB" placeholder="乙方联系人" oninput="sync()">
-            <input type="text" id="in-phoneB" placeholder="乙方电话" oninput="sync()">
-            <input type="text" id="in-emailB" placeholder="乙方邮箱" oninput="sync()">
+            <input type="text" id="in-phoneB" placeholder="乙方电话/邮箱" oninput="sync()">
         </div>
 
         <div class="input-block">
-            <label>4. 报价明细</label>
-            <div id="items-list">
-                <div class="device-row">
-                    <input type="text" class="p-name" placeholder="名称型号" oninput="calc()">
-                    <input type="number" class="p-price" placeholder="单价" oninput="calc()" style="width:80px">
-                    <input type="number" class="p-qty" placeholder="数量" oninput="calc()" style="width:60px">
-                </div>
+            <label>4. 报价清单</label>
+            <div id="items-list"></div>
+            <button onclick="addNewRow()" style="width:100%; font-size:11px; padding:4px;">+ 添加报价行</button>
+        </div>
+
+        <div class="input-block">
+            <label id="lbl-terms-select">合约条款模板</label>
+            <select id="terms-selector" onchange="applyTermsTemplate()">
+                <option value="empty">-- 请选择模板 (可再编辑) --</option>
+                <option value="contract">1. 设备和合同</option>
+                <option value="service">2. 技术服务</option>
+                <option value="other">3. 其他 (空白)</option>
+            </select>
+            <textarea id="in-terms" placeholder="条款细节..." oninput="sync()"></textarea>
+            
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <div style="flex:1"><label>税率 %</label><input type="number" id="in-tax-rate" value="13" oninput="calc()"></div>
+                <div style="flex:1"><label>总折扣</label><input type="number" id="in-discount" value="0" oninput="calc()"></div>
             </div>
-            <button onclick="addNewRow()" style="width:100%; font-size:12px; cursor:pointer;">+ 添加项目</button>
-        </div>
-
-        <div class="input-block">
-            <label style="display:inline-flex; align-items:center; cursor:pointer;">
-                <input type="checkbox" id="use-discount" onchange="calc()" style="width:auto; margin-right:8px;"> 应用折扣?
-            </label>
-            <div id="discount-input-wrap" style="display:none; margin-top:10px;">
-                <input type="number" id="in-discount" placeholder="折扣金额" value="0" oninput="calc()">
+            
+            <label style="margin-top:10px;">Logo/公章上传</label>
+            <div style="display:flex; gap:5px;">
+                <input type="file" accept="image/*" onchange="uploadImg(this, 'out-logo')" style="font-size:10px; width:50%">
+                <input type="file" accept="image/*" onchange="uploadImg(this, 'out-seal')" style="font-size:10px; width:50%">
             </div>
         </div>
-
-        <div class="input-block">
-            <label>5. 合约条款 (付款条件、质保期等)</label>
-            <textarea id="in-terms" placeholder="例如：&#10;1.付款方式：预付30%，款到发货。&#10;2.质保期：验收合格后一年。" oninput="sync()"></textarea>
-        </div>
-
-        <button class="btn-print" onclick="window.print()">🖨️ 导出 PDF</button>
     </div>
 
     <div class="preview-area">
-        <div class="paper">
+        <div class="paper" id="print-area">
             <div class="page-header">
-                <div class="company-name-header" id="header-company-name">上海玮特思智能设备有限公司</div>
+                <div class="company-name-header" id="out-header-company">上海玮特思智能设备有限公司</div>
                 <img id="out-logo">
             </div>
-            
-            <div class="title-section">
-                <h1 class="doc-title" id="out-title">技术服务报价单</h1>
-                <div class="meta-line">
-                    <span id="label-no">编号：<span id="out-no"></span></span>
-                    <span id="label-date">日期：<span id="out-date">2026年02月25日</span></span>
-                </div>
+            <div class="title-section"><h1 class="doc-title" id="out-title">技术服务报价单</h1></div>
+            <div class="meta-line">
+                <span><b id="txt-no-label">编号：</b><span id="out-no"></span></span>
+                <span><b id="txt-date-label">日期：</b><span id="out-date"></span></span>
             </div>
-            
             <div class="contact-grid">
                 <div class="contact-col">
-                    <p><span class="bold-label" id="label-partyA">甲方 (需方)：</span><span id="out-partyA" style="font-weight:bold;"></span></p>
-                    <p><span class="bold-label" id="label-contactA">联系人：</span><span id="out-contactA"></span></p>
-                    <p><span class="bold-label" id="label-phoneA">电 话：</span><span id="out-phoneA"></span></p>
-                    <p><span class="bold-label" id="label-emailA">邮 箱：</span><span id="out-emailA"></span></p>
+                    <div class="contact-row"><b id="txt-partyA">甲方：</b><span id="out-partyA"></span></div>
+                    <div class="contact-row"><b id="txt-addrA">地址：</b><span id="out-addrA"></span></div>
+                    <div class="contact-row"><b id="txt-contactA">联系人：</b><span id="out-contactA"></span></div>
+                    <div class="contact-row"><b id="txt-phoneA">电话：</b><span id="out-phoneA"></span></div>
                 </div>
                 <div class="contact-col">
-                    <p><span class="bold-label" id="label-partyB">乙方 (供方)：</span><span id="out-company-display">上海玮特思智能设备有限公司</span></p>
-                    <p><span class="bold-label" id="label-contactB">联系人：</span><span id="out-contactB"></span></p>
-                    <p><span class="bold-label" id="label-phoneB">电 话：</span><span id="out-phoneB"></span></p>
-                    <p><span class="bold-label" id="label-emailB">邮 箱：</span><span id="out-emailB"></span></p>
+                    <div class="contact-row"><b id="txt-partyB">乙方：</b><span id="out-partyB-name"></span></div>
+                    <div class="contact-row"><b id="txt-addrB">地址：</b><span id="out-addrB"></span></div>
+                    <div class="contact-row"><b id="txt-contactB">联系人：</b><span id="out-contactB"></span></div>
+                    <div class="contact-row"><b id="txt-phoneB">电话：</b><span id="out-phoneB"></span></div>
                 </div>
             </div>
-
+            <div style="font-weight:bold; margin-bottom:5px;" id="txt-table-pre">产品与内容</div>
             <table>
-                <thead>
-                    <tr id="table-head">
-                        <th style="width: 7%">序号</th>
-                        <th style="width: 43%">项目名称及规格</th>
-                        <th style="width: 10%">单位</th>
-                        <th style="width: 10%">数量</th>
-                        <th style="width: 15%">未税单价</th>
-                        <th style="width: 15%">未税总价</th>
-                    </tr>
-                </thead>
+                <thead><tr id="table-head">
+                    <th style="width:45px">序号</th><th>描述型号</th><th style="width:55px">单位</th><th style="width:90px">未税单价</th><th style="width:60px">数量</th><th style="width:100px">合计</th>
+                </tr></thead>
                 <tbody id="table-body"></tbody>
                 <tfoot>
-                    <tr>
-                        <td colspan="5" class="tfoot-label" id="label-subtotal">合计</td>
-                        <td id="res-untaxed">0.00</td>
-                    </tr>
-                    <tr id="row-discount" style="display:none;">
-                        <td colspan="5" class="tfoot-label" id="label-discount">折扣金额</td>
-                        <td id="res-discount">0.00</td>
-                    </tr>
-                    <tr>
-                        <td colspan="5" class="tfoot-label" id="label-total">含税总价（含增值税13%）</td>
-                        <td id="res-taxed" style="font-weight: bold;">0.00</td>
-                    </tr>
+                    <tr><td colspan="5" style="text-align:right; font-weight:bold;" id="txt-subtotal">未税总价</td><td id="res-total-untaxed">0.00</td></tr>
+                    <tr><td colspan="5" style="text-align:right; font-weight:bold;" id="label-tax-desc">含税总价（13%增值税）</td><td id="res-final-total" style="font-weight:bold;">0.00</td></tr>
                 </tfoot>
             </table>
-
             <div class="terms-section">
-                <div class="terms-title" id="label-terms-title">合约条款：</div>
-                <div class="terms-content" id="out-terms"></div>
+                <div style="font-weight:bold; margin-bottom:4px;" id="txt-terms-label">合约条款：</div>
+                <div id="out-terms" class="terms-content"></div>
             </div>
-
             <div class="sign-wrap">
+                <div class="sign-box"><b id="txt-signA">甲方确认（签章）</b><p style="margin-top:50px"><span class="txt-rep">授权代表：</span>________________</p></div>
                 <div class="sign-box">
-                    <p><b id="label-signA">甲方确认（签章）</b></p>
-                    <p style="margin-top:60px" id="label-repA">授权代表：________________</p>
-                    <p id="label-dateA">日期：<span class="out-date-sign">2026年02月25日</span></p>
-                </div>
-                <div class="sign-box">
-                    <p><b id="label-signB">乙方确认（签章）</b></p>
-                    <img id="out-seal" class="seal-preview" style="display: none;">
-                    <p style="margin-top:60px" id="label-repB">授权代表：________________</p>
-                    <p id="label-dateB">日期：<span class="out-date-sign">2026年02月25日</span></p>
+                    <b id="txt-signB">乙方确认（签章）</b>
+                    <img id="out-seal" class="seal-preview">
+                    <p style="margin-top:50px"><span class="txt-rep">授权代表：</span>________________</p>
                 </div>
             </div>
         </div>
@@ -235,152 +192,137 @@
 
     <script>
         let currentLang = 'zh';
-        const dict = {
+        const templates = {
             zh: {
-                company: "上海玮特思智能设备有限公司",
-                no: "编号：", date: "日期：", partyA: "甲方 (需方)：", contact: "联系人：", phone: "电 话：", email: "邮 箱：",
-                partyB: "乙方 (供方)：", head: ["序号", "项目名称及规格", "单位", "数量", "未税单价", "金额"],
-                subtotal: "未税总价", discount: "折扣金额", total: "含税总价（含增值税13%）",
-                signA: "甲方确认（签章）", signB: "乙方确认（签章）", rep: "授权代表：", unit: "套", datePrefix: "日期：",
-                terms: "合约条款："
+                contract: `二、 付款方式与所有权保留\n付款方式：\n（1）订金： 甲方支付 30%。\n（2）发货款： 乙方发货前支付 60%。\n（3）验收款： 验收合格后支付 10%。\n收款账户：建设银行金茂支行 31050161369900001169`,
+                service: `一、 服务内容与范围\n校验服务： 乙方提供校验服务。\n维护响应： 定期维护 1 次/年；4 小时响应。\n二、 服务期限与支付\n支付： 收到乙方发票后 15 个工作日内支付 100% 服务费。`,
+                other: ""
             },
             en: {
-                company: "SHANGHAI WEITESI INTELLIGENT EQUIPMENT CO., LTD",
-                no: "No.: ", date: "Date: ", partyA: "Client (Party A): ", contact: "Contact: ", phone: "Tel: ", email: "Email: ",
-                partyB: "Supplier (Party B): ", head: ["No.", "Description & Spec", "Unit", "Qty", "Unit Price", "Amount"],
-                subtotal: "Subtotal", discount: "Discount", total: "Total (Incl. 13% VAT)",
-                signA: "Approved by Party A", signB: "Approved by Party B", rep: "Authorized Rep: ", unit: "Set", datePrefix: "Date: ",
-                terms: "Terms & Conditions:"
+                contract: `2. Payment Terms & Retention of Title\n- Deposit: 30% after signing.\n- Pre-shipment: 60% before delivery.\n- Final: 10% after acceptance.\nBank: CCB Jinmao Branch 31050161369900001169`,
+                service: `1. Scope of Service\nParty B shall provide calibration and maintenance (1 time/year).\n2. Term & Payment\nPayment: 100% within 15 working days after acceptance.`,
+                other: ""
+            }
+        };
+
+        const dict = {
+            zh: {
+                company: "上海玮特思智能设备有限公司", title: "技术服务报价单", tablePre: "产品与内容", no: "编号：", date: "日期：", partyA: "甲方：", addr: "地址：", contact: "联系人：", phone: "电话：", partyB: "乙方：",
+                head: ["序号", "描述型号", "单位", "未税单价", "数量", "合计"], subtotal: "未税总价", tax: "含税总价（{rate}%增值税）", terms: "合约条款：", signA: "甲方确认（签章）", signB: "乙方确认（签章）",
+                tpl: ["-- 选择模板 --", "1. 设备和合同", "2. 技术服务", "3. 其他"], rep: "授权代表："
+            },
+            en: {
+                company: "SHANGHAI WEITESI INTELLIGENT EQUIPMENT CO., LTD", title: "Technical Quotation", tablePre: "Product & Content", no: "No.: ", date: "Date: ", partyA: "Client: ", addr: "Address: ", contact: "Attn: ", phone: "Tel: ", partyB: "Supplier: ",
+                head: ["No.", "Description", "Unit", "Price", "Qty", "Total"], subtotal: "Subtotal", tax: "Total (Incl. {rate}% VAT)", terms: "Terms & Conditions:", signA: "Approved by Client", signB: "Approved by Supplier",
+                tpl: ["-- Select Template --", "1. Equipment", "2. Service", "3. Other"], rep: "Authorized Rep: "
             }
         };
 
         function formatEnDate(dateStr) {
             const date = new Date(dateStr.replace(/年|月/g, "-").replace(/日/g, ""));
             if (isNaN(date.getTime())) return dateStr;
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            return date.toLocaleDateString('en-US', options);
+            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
         }
 
         function setLang(lang) {
             currentLang = lang;
-            document.getElementById('btn-zh').classList.toggle('active', lang === 'zh');
-            document.getElementById('btn-en').classList.toggle('active', lang === 'en');
-            
+            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-' + lang).classList.add('active');
             const d = dict[lang];
-            document.getElementById('header-company-name').innerText = d.company;
-            document.getElementById('out-company-display').innerText = d.company;
-            document.getElementById('label-no').firstChild.textContent = d.no;
-            document.getElementById('label-date').firstChild.textContent = d.date;
             
-            const rawDate = document.getElementById('in-date').value;
-            const displayDate = (lang === 'en') ? formatEnDate(rawDate) : rawDate;
-            document.getElementById('out-date').innerText = displayDate;
-            
-            document.getElementById('label-dateA').firstChild.textContent = d.datePrefix;
-            document.getElementById('label-dateB').firstChild.textContent = d.datePrefix;
-            document.querySelectorAll('.out-date-sign').forEach(el => {
-                el.innerText = (lang === 'zh' && rawDate === '2026年02月25日') ? "2026年  月  日" : displayDate;
-            });
+            document.getElementById('out-header-company').innerText = d.company;
+            document.getElementById('out-partyB-name').innerText = document.getElementById('in-partyB-manual').value || d.company;
+            document.getElementById('out-title').innerText = d.title;
+            document.getElementById('txt-table-pre').innerText = d.tablePre;
+            document.getElementById('txt-no-label').innerText = d.no;
+            document.getElementById('txt-date-label').innerText = d.date;
+            document.getElementById('txt-partyA').innerText = d.partyA;
+            document.getElementById('txt-addrA').innerText = d.addr;
+            document.getElementById('txt-addrB').innerText = d.addr;
+            document.getElementById('txt-contactA').innerText = d.contact;
+            document.getElementById('txt-contactB').innerText = d.contact;
+            document.getElementById('txt-phoneA').innerText = d.phone;
+            document.getElementById('txt-phoneB').innerText = d.phone;
+            document.getElementById('txt-subtotal').innerText = d.subtotal;
+            document.getElementById('txt-terms-label').innerText = d.terms;
+            document.getElementById('txt-signA').innerText = d.signA;
+            document.getElementById('txt-signB').innerText = d.signB;
 
-            document.getElementById('label-partyA').innerText = d.partyA;
-            document.getElementById('label-contactA').innerText = d.contact;
-            document.getElementById('label-phoneA').innerText = d.phone;
-            document.getElementById('label-emailA').innerText = d.email;
-            document.getElementById('label-partyB').innerText = d.partyB;
-            document.getElementById('label-contactB').innerText = d.contact;
-            document.getElementById('label-phoneB').innerText = d.phone;
-            document.getElementById('label-emailB').innerText = d.email;
+            // 修正授权代表文字
+            document.querySelectorAll('.txt-rep').forEach(el => el.innerText = d.rep);
             
-            const headCells = document.querySelectorAll('#table-head th');
-            d.head.forEach((txt, i) => headCells[i].innerText = txt);
+            const options = document.getElementById('terms-selector').options;
+            d.tpl.forEach((label, i) => options[i].text = label);
             
-            document.getElementById('label-subtotal').innerText = d.subtotal;
-            document.getElementById('label-discount').innerText = d.discount;
-            document.getElementById('label-total').innerText = d.total;
-            document.getElementById('label-signA').innerText = d.signA;
-            document.getElementById('label-signB').innerText = d.signB;
-            document.getElementById('label-repA').innerText = d.rep + "________________";
-            document.getElementById('label-repB').innerText = d.rep + "________________";
-            document.getElementById('label-terms-title').innerText = d.terms; // 翻译条款标题
-            
+            const ths = document.querySelectorAll('#table-head th');
+            d.head.forEach((text, i) => ths[i].innerText = text);
+            sync();
+        }
+
+        function applyTermsTemplate() {
+            const val = document.getElementById('terms-selector').value;
+            if (val !== "empty") { document.getElementById('in-terms').value = templates[currentLang][val]; sync(); }
+        }
+
+        function sync() {
+            document.getElementById('out-no').innerText = document.getElementById('in-no').value;
+            document.getElementById('out-title').innerText = document.getElementById('in-title').value;
+            const rawDate = document.getElementById('in-date').value;
+            document.getElementById('out-date').innerText = (currentLang === 'en') ? formatEnDate(rawDate) : rawDate;
+            document.getElementById('out-partyA').innerText = document.getElementById('in-partyA').value;
+            document.getElementById('out-addrA').innerText = document.getElementById('in-addrA').value;
+            document.getElementById('out-contactA').innerText = document.getElementById('in-contactA').value;
+            document.getElementById('out-phoneA').innerText = document.getElementById('in-phoneA').value;
+            document.getElementById('out-addrB').innerText = document.getElementById('in-addrB').value;
+            document.getElementById('out-partyB-name').innerText = document.getElementById('in-partyB-manual').value;
+            document.getElementById('out-contactB').innerText = document.getElementById('in-contactB').value;
+            document.getElementById('out-phoneB').innerText = document.getElementById('in-phoneB').value;
+            document.getElementById('out-terms').innerText = document.getElementById('in-terms').value;
             calc();
         }
 
         function generateID(prefix) {
             const d = new Date();
-            const dateStr = d.getFullYear() + (d.getMonth()+1).toString().padStart(2,'0') + d.getDate().toString().padStart(2,'0');
-            const rand = Math.floor(Math.random()*900)+100;
-            document.getElementById('in-no').value = prefix + dateStr + rand;
-            sync();
+            const id = prefix + d.getFullYear() + (d.getMonth()+1).toString().padStart(2,'0') + d.getDate() + (Math.floor(Math.random()*900)+100);
+            document.getElementById('in-no').value = id; sync();
         }
 
-        function uploadImg(input, id) {
-            const file = input.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    const img = document.getElementById(id);
-                    img.src = e.target.result; img.style.display = 'block';
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function addNewRow() {
+        function addNewRow(n="", u="套", p="", q="") {
+            const container = document.getElementById('items-list');
             const row = document.createElement('div');
             row.className = 'device-row';
-            row.innerHTML = `<input type="text" class="p-name" placeholder="名称型号" oninput="calc()"><input type="number" class="p-price" oninput="calc()" style="width:80px"><input type="number" class="p-qty" oninput="calc()" style="width:60px">`;
-            document.getElementById('items-list').appendChild(row);
-        }
-
-        function sync() {
-            document.getElementById('out-title').innerText = document.getElementById('in-title').value;
-            const rawDate = document.getElementById('in-date').value;
-            const displayDate = (currentLang === 'en') ? formatEnDate(rawDate) : rawDate;
-            document.getElementById('out-date').innerText = displayDate;
-            
-            document.querySelectorAll('.out-date-sign').forEach(el => {
-                el.innerText = displayDate;
-            });
-
-            document.getElementById('out-no').innerText = document.getElementById('in-no').value;
-            document.getElementById('out-partyA').innerText = document.getElementById('in-partyA').value;
-            document.getElementById('out-contactA').innerText = document.getElementById('in-contactA').value;
-            document.getElementById('out-phoneA').innerText = document.getElementById('in-phoneA').value;
-            document.getElementById('out-emailA').innerText = document.getElementById('in-emailA').value;
-            document.getElementById('out-contactB').innerText = document.getElementById('in-contactB').value;
-            document.getElementById('out-phoneB').innerText = document.getElementById('in-phoneB').value;
-            document.getElementById('out-emailB').innerText = document.getElementById('in-emailB').value;
-            
-            // 同步条款内容
-            document.getElementById('out-terms').innerText = document.getElementById('in-terms').value;
+            row.innerHTML = `<input type="text" class="p-name" value="${n}" placeholder="项目" oninput="calc()"><input type="text" class="p-unit" value="${u}" oninput="calc()"><input type="number" class="p-price" value="${p}" oninput="calc()"><input type="number" class="p-qty" value="${q}" oninput="calc()"><span style="color:red; cursor:pointer;" onclick="this.parentElement.remove();calc();">×</span>`;
+            container.appendChild(row); calc();
         }
 
         function calc() {
             const names = document.querySelectorAll('.p-name');
             const prices = document.querySelectorAll('.p-price');
             const qtys = document.querySelectorAll('.p-qty');
-            const useDisc = document.getElementById('use-discount').checked;
-            const discVal = parseFloat(document.getElementById('in-discount').value) || 0;
-
-            document.getElementById('discount-input-wrap').style.display = useDisc ? 'block' : 'none';
-            document.getElementById('row-discount').style.display = useDisc ? 'table-row' : 'none';
-
-            let html = ''; let total = 0;
+            let totalUntaxed = 0; let html = '';
             names.forEach((n, i) => {
                 const p = parseFloat(prices[i].value) || 0;
                 const q = parseFloat(qtys[i].value) || 0;
-                const amt = p * q; total += amt;
-                const unit = dict[currentLang].unit;
-                html += `<tr><td>${i+1}</td><td style="text-align:left">${n.value||'-'}</td><td>${unit}</td><td>${q}</td><td>${p.toLocaleString(undefined,{minimumFractionDigits:2})}</td><td>${amt.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>`;
+                const sub = p * q; totalUntaxed += sub;
+                html += `<tr><td>${i+1}</td><td style="text-align:left">${n.value}</td><td>${document.querySelectorAll('.p-unit')[i].value}</td><td>${p.toLocaleString()}</td><td>${q}</td><td>${sub.toLocaleString(undefined,{minimumFractionDigits:2})}</td></tr>`;
             });
-
             document.getElementById('table-body').innerHTML = html;
-            document.getElementById('res-untaxed').innerText = total.toLocaleString(undefined,{minimumFractionDigits:2});
-            document.getElementById('res-discount').innerText = useDisc ? "-" + discVal.toLocaleString() : "0.00";
-            const final = useDisc ? (total - discVal) : total;
-            document.getElementById('res-taxed').innerText = (final * 1.13).toLocaleString(undefined,{minimumFractionDigits:2});
+            document.getElementById('res-total-untaxed').innerText = totalUntaxed.toLocaleString(undefined,{minimumFractionDigits:2});
+            const disc = parseFloat(document.getElementById('in-discount').value) || 0;
+            const tax = parseFloat(document.getElementById('in-tax-rate').value) || 0;
+            const final = (totalUntaxed - disc) * (1 + tax/100);
+            document.getElementById('label-tax-desc').innerText = dict[currentLang].tax.replace('{rate}', tax);
+            document.getElementById('res-final-total').innerText = final.toLocaleString(undefined,{minimumFractionDigits:2});
         }
+
+        function uploadImg(input, id) {
+            const reader = new FileReader();
+            reader.onload = e => { document.getElementById(id).src = e.target.result; document.getElementById(id).style.display = 'block'; };
+            reader.readAsDataURL(input.files[0]);
+        }
+
+        function resetForm() { if(confirm("确定清空内容？")) location.reload(); }
+        window.onload = function() { addNewRow(); sync(); };
     </script>
 </body>
 </html>
