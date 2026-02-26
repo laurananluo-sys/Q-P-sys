@@ -22,7 +22,8 @@
         .sidebar-header { font-size: 18px; font-weight: bold; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; color: #263238; }
         .input-block { margin-bottom: 20px; padding: 10px; background: #fcfcfc; border: 1px solid #f0f0f0; border-radius: 4px; }
         label { display: block; margin-bottom: 6px; font-size: 12px; font-weight: bold; color: #555; }
-        input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; margin-bottom: 6px; }
+        input, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; margin-bottom: 6px; }
+        textarea { resize: vertical; min-height: 100px; line-height: 1.5; }
 
         .lang-switch { display: flex; gap: 10px; margin-bottom: 10px; }
         .lang-btn { flex: 1; padding: 8px; cursor: pointer; border: 1px solid #ccc; border-radius: 4px; background: #fff; font-size: 12px; }
@@ -33,7 +34,10 @@
 
         /* 右侧 A4 预览 */
         .preview-area { flex: 1; overflow-y: auto; padding: 40px; display: flex; justify-content: center; }
-        .paper { width: var(--paper-width); min-height: 297mm; padding: 15mm 20mm; background: white; position: relative; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .paper { 
+            width: var(--paper-width); min-height: 297mm; padding: 15mm 20mm; 
+            background: white; position: relative; box-shadow: 0 0 10px rgba(0,0,0,0.1); 
+        }
 
         /* 页眉重排：左侧公司名，右侧Logo */
         .page-header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1.5px solid #000; margin-bottom: 15px; padding-bottom: 8px; }
@@ -43,7 +47,6 @@
         .title-section { text-align: center; margin-bottom: 15px; }
         .doc-title { font-size: 28px; font-weight: bold; margin: 0 0 10px 0; letter-spacing: 8px; }
         
-        /* 编号日期行：删除了线条 */
         .meta-line { 
             display: flex; 
             justify-content: space-between; 
@@ -61,14 +64,19 @@
         th { font-weight: bold; }
         .tfoot-label { text-align: right; font-weight: bold; padding-right: 15px; }
 
-        .sign-wrap { display: flex; justify-content: space-between; margin-top: 45px; }
+        /* 合约条款样式 */
+        .terms-section { margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
+        .terms-title { font-weight: bold; font-size: 14px; margin-bottom: 10px; }
+        .terms-content { font-size: 13px; white-space: pre-wrap; word-wrap: break-word; line-height: 1.6; }
+
+        .sign-wrap { display: flex; justify-content: space-between; margin-top: 45px; page-break-inside: avoid; }
         .sign-box { width: 48%; border: 1px solid #000; padding: 15px; position: relative; min-height: 150px; font-size: 13px; }
         .seal-preview { position: absolute; width: 130px; right: 25px; top: 15px; opacity: 0.95; pointer-events: none; }
 
         @media print {
             .no-print-sidebar { display: none !important; }
             .preview-area { padding: 0; }
-            .paper { width: 100% !important; padding: 10mm 15mm; margin: 0; border: none; box-shadow: none; }
+            .paper { width: 100% !important; padding: 10mm 15mm; margin: 0; border: none; box-shadow: none; min-height: auto; }
             @page { size: A4; margin: 0; }
         }
 
@@ -138,6 +146,11 @@
             </div>
         </div>
 
+        <div class="input-block">
+            <label>5. 合约条款 (付款条件、质保期等)</label>
+            <textarea id="in-terms" placeholder="例如：&#10;1.付款方式：预付30%，款到发货。&#10;2.质保期：验收合格后一年。" oninput="sync()"></textarea>
+        </div>
+
         <button class="btn-print" onclick="window.print()">🖨️ 导出 PDF</button>
     </div>
 
@@ -179,13 +192,13 @@
                         <th style="width: 10%">单位</th>
                         <th style="width: 10%">数量</th>
                         <th style="width: 15%">未税单价</th>
-                        <th style="width: 15%">金额</th>
+                        <th style="width: 15%">未税总价</th>
                     </tr>
                 </thead>
                 <tbody id="table-body"></tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="5" class="tfoot-label" id="label-subtotal">未税总价</td>
+                        <td colspan="5" class="tfoot-label" id="label-subtotal">合计</td>
                         <td id="res-untaxed">0.00</td>
                     </tr>
                     <tr id="row-discount" style="display:none;">
@@ -198,6 +211,11 @@
                     </tr>
                 </tfoot>
             </table>
+
+            <div class="terms-section">
+                <div class="terms-title" id="label-terms-title">合约条款：</div>
+                <div class="terms-content" id="out-terms"></div>
+            </div>
 
             <div class="sign-wrap">
                 <div class="sign-box">
@@ -223,18 +241,19 @@
                 no: "编号：", date: "日期：", partyA: "甲方 (需方)：", contact: "联系人：", phone: "电 话：", email: "邮 箱：",
                 partyB: "乙方 (供方)：", head: ["序号", "项目名称及规格", "单位", "数量", "未税单价", "金额"],
                 subtotal: "未税总价", discount: "折扣金额", total: "含税总价（含增值税13%）",
-                signA: "甲方确认（签章）", signB: "乙方确认（签章）", rep: "授权代表：", unit: "套", datePrefix: "日期："
+                signA: "甲方确认（签章）", signB: "乙方确认（签章）", rep: "授权代表：", unit: "套", datePrefix: "日期：",
+                terms: "合约条款："
             },
             en: {
                 company: "SHANGHAI WEITESI INTELLIGENT EQUIPMENT CO., LTD",
                 no: "No.: ", date: "Date: ", partyA: "Client (Party A): ", contact: "Contact: ", phone: "Tel: ", email: "Email: ",
                 partyB: "Supplier (Party B): ", head: ["No.", "Description & Spec", "Unit", "Qty", "Unit Price", "Amount"],
                 subtotal: "Subtotal", discount: "Discount", total: "Total (Incl. 13% VAT)",
-                signA: "Approved by Party A", signB: "Approved by Party B", rep: "Authorized Rep: ", unit: "Set", datePrefix: "Date: "
+                signA: "Approved by Party A", signB: "Approved by Party B", rep: "Authorized Rep: ", unit: "Set", datePrefix: "Date: ",
+                terms: "Terms & Conditions:"
             }
         };
 
-        // 英文日期转换函数
         function formatEnDate(dateStr) {
             const date = new Date(dateStr.replace(/年|月/g, "-").replace(/日/g, ""));
             if (isNaN(date.getTime())) return dateStr;
@@ -253,12 +272,10 @@
             document.getElementById('label-no').firstChild.textContent = d.no;
             document.getElementById('label-date').firstChild.textContent = d.date;
             
-            // 修正：英文日期转换及前缀
             const rawDate = document.getElementById('in-date').value;
             const displayDate = (lang === 'en') ? formatEnDate(rawDate) : rawDate;
             document.getElementById('out-date').innerText = displayDate;
             
-            // 修正：签字下方日期也同步更新
             document.getElementById('label-dateA').firstChild.textContent = d.datePrefix;
             document.getElementById('label-dateB').firstChild.textContent = d.datePrefix;
             document.querySelectorAll('.out-date-sign').forEach(el => {
@@ -284,6 +301,7 @@
             document.getElementById('label-signB').innerText = d.signB;
             document.getElementById('label-repA').innerText = d.rep + "________________";
             document.getElementById('label-repB').innerText = d.rep + "________________";
+            document.getElementById('label-terms-title').innerText = d.terms; // 翻译条款标题
             
             calc();
         }
@@ -321,7 +339,6 @@
             const displayDate = (currentLang === 'en') ? formatEnDate(rawDate) : rawDate;
             document.getElementById('out-date').innerText = displayDate;
             
-            // 同步更新签署区日期
             document.querySelectorAll('.out-date-sign').forEach(el => {
                 el.innerText = displayDate;
             });
@@ -334,6 +351,9 @@
             document.getElementById('out-contactB').innerText = document.getElementById('in-contactB').value;
             document.getElementById('out-phoneB').innerText = document.getElementById('in-phoneB').value;
             document.getElementById('out-emailB').innerText = document.getElementById('in-emailB').value;
+            
+            // 同步条款内容
+            document.getElementById('out-terms').innerText = document.getElementById('in-terms').value;
         }
 
         function calc() {
